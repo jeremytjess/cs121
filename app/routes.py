@@ -3,13 +3,22 @@ from app import app
 import os
 from werkzeug import secure_filename
 from app import predictor 
+from PIL import Image
 
 @app.route('/<filename>')
 def get_file(filename):
-    return send_from_directory('static',filename)
+    """ Takes in filename and uploads the file to the 
+        static directory
+    """
+    return send_from_directory('static/img', filename)
 
 @app.route('/', methods=['GET', 'POST'])
 def upload_file():
+    """ This runs when a Get or POST request is sent to our 
+        website at the / endpoint renders our displayResult.html
+        file if a POST request is sent with an image of type jpg,
+        else renders index.html
+    """
     if request.method == 'POST':
         # check if the post request has the file part
         if 'file' not in request.files:
@@ -26,14 +35,24 @@ def upload_file():
             save_to=(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             file.save(save_to)
             pred_class=predictor.model_predict(save_to, '/home/ubuntu/cs121/app')
-            return render_template('displayResult.html', filename=filename, prediction=pred_class)
+            return render_template('displayResult.html', filename=filename, prediction=pred_class)    
+        else:
+            return render_template('error.html')
     return render_template('index.html')
 
+@app.route('/about')
+def about():
+    """ when requests are sent to the /about endpoint this 
+        renders displayFile.html
+    """
+    return render_template('displayFile.html')
+
 # allowed image types
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+ALLOWED_EXTENSIONS = set(['jpg', 'jpeg'])
 app.config['ALLOWED_EXTENSIONS']=ALLOWED_EXTENSIONS
 
-# is file allowed to be uploaded?
 def allowed_file(filename):
+    """ is file allowed to be uploaded?
+    """
     return '.' in filename and \
            filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
